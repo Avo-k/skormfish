@@ -124,7 +124,7 @@ MATE_LOWER = opp_piece_value['K'] - 10 * opp_piece_value['Q']
 MATE_UPPER = opp_piece_value['K'] + 10 * opp_piece_value['Q']
 
 # Delta pruning
-QS_LIMIT = 500
+QS_LIMIT = 200
 
 
 def get_color(pos):
