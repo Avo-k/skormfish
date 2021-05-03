@@ -5,9 +5,6 @@ import skormfish as sk
 
 
 API_TOKEN = open("api_token.txt").read()
-
-print(API_TOKEN)
-
 bot_id = 'skormfish'
 
 session = berserk.TokenSession(API_TOKEN)

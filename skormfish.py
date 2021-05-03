@@ -4,13 +4,6 @@ from collections import namedtuple
 import re, sys, time
 from chess_logic import *
 
-###############################################################################
-# Search logic
-###############################################################################
-
-# lower <= s(pos) <= upper
-Entry = namedtuple('Entry', 'flag value')
-
 
 class Skormfish:
 

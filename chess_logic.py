@@ -4,10 +4,6 @@ from collections import namedtuple
 import re, sys, time
 
 
-###############################################################################
-# Global constants
-###############################################################################
-
 WHITE, BLACK = range(2)
 
 FEN_INITIAL = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
@@ -69,6 +65,7 @@ for k, table in pst.items():
     padrow = lambda row: (0,) + tuple(x + piece[k] for x in row) + (0,)
     pst[k] = sum((padrow(table[i * 8:i * 8 + 8]) for i in range(8)), ())
     pst[k] = (0,) * 20 + pst[k] + (0,) * 20
+
 # Our board is represented as a 120 character string. The padding allows for
 # fast detection of moves that don't stay within the board.
 A1, H1, A8, H8 = 91, 98, 21, 28
@@ -98,9 +95,6 @@ directions = {
     'K': (N, E, S, W, N + E, S + E, S + W, N + W)
 }
 
-# Mate value must be greater than 8*queen + 2*(rook+knight+bishop)
-# King value is set to twice this value such that if the opponent is
-# 8 queens up, but we got the king, we still exceed MATE_VALUE.
 # When a MATE is detected, we'll set the score to MATE_UPPER - plies to get there
 # E.g. Mate in 3 will be MATE_UPPER - 6
 MATE_LOWER = piece['K'] - 10 * piece['Q']
@@ -110,70 +104,19 @@ MATE_UPPER = piece['K'] + 10 * piece['Q']
 TABLE_SIZE = 1e7
 
 # Constants for tuning search
-QS_LIMIT = 250  # Delta pruning
-EVAL_ROUGHNESS = 13
-DRAW_TEST = True
+QS_LIMIT = 200  # Delta pruning
 
 
 def get_color(pos):
     ''' A slightly hacky way to to get the color from a sunfish position '''
     return BLACK if pos.board.startswith('\n') else WHITE
 
+# lower <= s(pos) <= upper
+Entry = namedtuple('Entry', 'flag value')
 
-def parse(c):
-    fil, rank = ord(c[0]) - ord('a'), int(c[1]) - 1
-    return A1 + fil - 10 * rank
-
-
-def render(i):
-    rank, fil = divmod(i - A1, 10)
-    return chr(fil + ord('a')) + str(-rank + 1)
-
-
-def print_pos(pos):
-    print()
-    uni_pieces = {'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'P': '♟',
-                  'r': '♖', 'n': '♘', 'b': '♗', 'q': '♕', 'k': '♔', 'p': '♙', '.': '·'}
-    for i, row in enumerate(pos.board.split()):
-        print(' ', 8 - i, ' '.join(uni_pieces.get(p, p) for p in row))
-    print('    a b c d e f g h \n\n')
-
-
-def mrender(pos, m):
-    """sunfish to uci"""
-    # Sunfish always assumes promotion to queen
-    p = 'q' if A8 <= m[1] <= H8 and pos.board[m[0]] == 'P' else ''
-    m = m if get_color(pos) == WHITE else (119 - m[0], 119 - m[1])
-    return render(m[0]) + render(m[1]) + p
-
-
-def mparse(color, move):
-    """uci to sunfish"""
-    m = (parse(move[0:2]), parse(move[2:4]))
-    return m if color == WHITE else (119 - m[0], 119 - m[1])
-
-
-def parseFEN(fen):
-    """ Parses a string in Forsyth-Edwards Notation into a Position """
-    board, color, castling, enpas, _hclock, _fclock = fen.split()
-    board = re.sub(r'\d', (lambda m: '.' * int(m.group(0))), board)
-    board = list(21 * ' ' + '  '.join(board.split('/')) + 21 * ' ')
-    board[9::10] = ['\n'] * 12
-    # if color == 'w': board[::10] = ['\n']*12
-    # if color == 'b': board[9::10] = ['\n']*12
-    board = ''.join(board)
-    wc = ('Q' in castling, 'K' in castling)
-    bc = ('k' in castling, 'q' in castling)
-    ep = parse(enpas) if enpas != '-' else 0
-    score = sum(pst[p][i] for i, p in enumerate(board) if p.isupper())
-    score -= sum(pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
-    pos = Position(board, score, wc, bc, ep, 0)
-    return pos if color == 'w' else pos.rotate()
-
-
-###############################################################################
-# Chess logic
-###############################################################################
+#####################################################
+# The Board
+#####################################################
 
 class Position(namedtuple('Position', 'board score wc bc ep kp')):
     """ A state of a chess game
@@ -279,3 +222,58 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
                 score += pst['P'][119 - (j + S)]
         return score
 
+
+#####################################################
+# Parse and render
+#####################################################
+
+
+def parse(c):
+    fil, rank = ord(c[0]) - ord('a'), int(c[1]) - 1
+    return A1 + fil - 10 * rank
+
+
+def render(i):
+    rank, fil = divmod(i - A1, 10)
+    return chr(fil + ord('a')) + str(-rank + 1)
+
+
+def mrender(pos, m):
+    """sunfish to uci"""
+    # Sunfish always assumes promotion to queen
+    p = 'q' if A8 <= m[1] <= H8 and pos.board[m[0]] == 'P' else ''
+    m = m if get_color(pos) == WHITE else (119 - m[0], 119 - m[1])
+    return render(m[0]) + render(m[1]) + p
+
+
+def mparse(color, move):
+    """uci to sunfish"""
+    m = (parse(move[0:2]), parse(move[2:4]))
+    return m if color == WHITE else (119 - m[0], 119 - m[1])
+
+
+def parseFEN(fen):
+    """ Parses a string in Forsyth-Edwards Notation into a Position """
+    board, color, castling, enpas, _hclock, _fclock = fen.split()
+    board = re.sub(r'\d', (lambda m: '.' * int(m.group(0))), board)
+    board = list(21 * ' ' + '  '.join(board.split('/')) + 21 * ' ')
+    board[9::10] = ['\n'] * 12
+    # if color == 'w': board[::10] = ['\n']*12
+    # if color == 'b': board[9::10] = ['\n']*12
+    board = ''.join(board)
+    wc = ('Q' in castling, 'K' in castling)
+    bc = ('k' in castling, 'q' in castling)
+    ep = parse(enpas) if enpas != '-' else 0
+    score = sum(pst[p][i] for i, p in enumerate(board) if p.isupper())
+    score -= sum(pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
+    pos = Position(board, score, wc, bc, ep, 0)
+    return pos if color == 'w' else pos.rotate()
+
+
+def print_pos(pos):
+    print()
+    uni_pieces = {'R': '♜', 'N': '♞', 'B': '♝', 'Q': '♛', 'K': '♚', 'P': '♟',
+                  'r': '♖', 'n': '♘', 'b': '♗', 'q': '♕', 'k': '♔', 'p': '♙', '.': '·'}
+    for i, row in enumerate(pos.board.split()):
+        print(' ', 8 - i, ' '.join(uni_pieces.get(p, p) for p in row))
+    print('    a b c d e f g h \n\n')
