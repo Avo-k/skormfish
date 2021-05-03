@@ -4,14 +4,11 @@ import time
 import skormfish as sk
 
 
-
 API_TOKEN = open("api_token.txt").read()
 bot_id = 'skormfish'
 
 session = berserk.TokenSession(API_TOKEN)
 client = berserk.Client(session=session)
-
-WHITE, BLACK = range(2)
 
 
 class Game:

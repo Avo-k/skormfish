@@ -1,9 +1,4 @@
-from __future__ import print_function
-from itertools import count
-from collections import namedtuple
-import re, sys, time
 from chess_logic import *
-
 
 
 class Skormfish:
