@@ -1,6 +1,6 @@
 # Skormfish
 
-Python chess engine based on sunfish.
+Python chess engine based on Sunfish.
 
 Play Skormfish at https://lichess.org/@/Skormfish
 
