@@ -13,27 +13,6 @@ class Skormfish:
         self.tt_cutoff = 0
         self.print_infos = print_infos
 
-    def play(self, fen=None, pos=None):
-        if not pos:
-            pos = parseFEN(fen)
-        self.hist.append(pos)
-        depth = move = score = None
-        start = time.time()
-
-        for depth, move, score in self.search(pos):
-            if time.time() - start > self.time_limit:
-                break
-
-        self.hist.append(pos.move(move))
-        move = mrender(pos, move)
-
-        if self.print_infos:
-            print(f" move: {move} - score: {score}\n",
-                  f"depth: {depth} - time: {round(time.time() - start, 2)}\n",
-                  f"nodes: {self.nodes} - tt_cutoff: {self.tt_cutoff} \n",
-                  "-"*40)
-        return move
-
     def search(self, pos, alpha=float('-inf'), beta=float('inf')):
         self.nodes = self.tt_cutoff = 0
         self.tt_score.clear()
@@ -107,3 +86,32 @@ class Skormfish:
         self.tt_score[pos, depth, root] = Entry(flag, value)
 
         return value
+
+    def play(self, fen=None, pos=None):
+        if not pos:
+            pos = parseFEN(fen)
+        self.hist.append(pos)
+        depth = move = score = None
+        start = time.time()
+
+        for depth, move, score in self.search(pos):
+            if time.time() - start > self.time_limit:
+                break
+
+        self.hist.append(pos.move(move))
+        move = mrender(pos, move)
+
+        if self.print_infos:
+            print(f" move: {move} - score: {score}\n",
+                  f"depth: {depth} - time: {round(time.time() - start, 2)}\n",
+                  f"nodes: {self.nodes} - tt_cutoff: {self.tt_cutoff} \n",
+                  "-"*40)
+        return move
+
+    def from_pos(self, moves):
+        moves = moves.split()
+        c = False
+
+        for move in moves:
+            self.hist.append(self.hist[-1].move(mparse(c, move)))
+            c = not c
