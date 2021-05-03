@@ -1,6 +1,6 @@
 # Skormfish
 
-Python chess engine based on sunfish 
+Python chess engine based on sunfish.
 
 Project still in progress and improving, feel free to play it at https://lichess.org/@/Skormfish
 
@@ -8,11 +8,11 @@ Project still in progress and improving, feel free to play it at https://lichess
 
 ### Search logic
 
-Negamax with alpha-beta prunning and transposition table
+Negamax with alpha-beta prunning and transposition table.
 
 ### Evaluation
 
-Simple evaluation with material value and piece square tables
+Simple evaluation with material value and piece square tables.
 
 ## Name
 
@@ -28,6 +28,4 @@ Negamax: https://en.wikipedia.org/wiki/Negamax
 
 https://www.chessprogramming.org/Main_Page
 
- 
-
-Feel free to send me messages if you have questions
+*Feel free to contact me if you have any questions*
