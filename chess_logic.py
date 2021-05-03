@@ -69,6 +69,7 @@ pst = {
              20, 30, 10,  0,  0, 10, 30, 20),
 }
 
+
 # Pad tables and join piece and pst dictionaries
 for k, table in pst.items():
     padrow = lambda row: (0,) + tuple(x + opp_piece_value[k] for x in row) + (0,)
