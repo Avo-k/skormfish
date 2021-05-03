@@ -112,6 +112,6 @@ class Skormfish:
         moves = moves.split()
         c = False
 
-        for move in moves:
+        for move in moves[:-1]:
             self.hist.append(self.hist[-1].move(mparse(c, move)))
             c = not c

@@ -28,8 +28,6 @@ class Game:
         print('game start!')
         client.bots.post_message(game_id, 'Good luck\nHave fun')
 
-        print(self.current_state)
-
         if self.moves != self.current_state['moves']:
             self.bot.from_pos(self.current_state['moves'])
             self.handle_state_change(self.current_state)
@@ -41,7 +39,7 @@ class Game:
             if event['type'] == 'gameState':
                 if event['status'] == 'started':
                     self.handle_state_change(event)
-                elif event['status'] in ('resign', 'outoftime'):
+                elif event['status'] in ('mate', 'resign', 'outoftime'):
                     client.bots.post_message(game_id, 'Good game\nWell played')
                 else:
                     print('NEW', event['status'])
@@ -50,6 +48,7 @@ class Game:
                 self.handle_chat_line(event)
 
     def handle_state_change(self, game_state):
+
         # If state change is not a move (draws offers, flag...)
         if game_state['moves'] == self.moves:
             return
