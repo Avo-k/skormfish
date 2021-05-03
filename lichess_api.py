@@ -18,6 +18,7 @@ class Game:
         self.client = client
         self.stream = client.bots.stream_game_state(game_id)
         self.current_state = next(self.stream)
+        self.moves = []
         self.bot_white = self.current_state['white'].get('id') == bot_id
         self.ctime = "btime" if self.bot_white else "wtime"
         self.bot = sk.Skormfish(time_limit=5)
@@ -25,6 +26,7 @@ class Game:
 
     def run(self):
         print('game start!')
+        client.bots.post_message(game_id, 'Good luck\nHave fun')
 
         if self.bot_white:
             self.client.bots.make_move(game_id, 'e2e4')
@@ -33,37 +35,39 @@ class Game:
             if event['type'] == 'gameState':
                 if event['status'] == 'started':
                     self.handle_state_change(event)
-                elif event['status'] in ('resign', 'aborted'):
+                elif event['status'] == 'resign':
+                    client.bots.post_message(game_id, 'Good game\nWell played')
+                else:
                     break
             elif event['type'] == 'chatLine':
                 self.handle_chat_line(event)
 
     def handle_state_change(self, game_state):
 
-        if (game_state['wdraw'], game_state['bdraw']) != self.draw == (False, False):
-            self.client.bots.post_message(game_id, "Sorry I don't do draws.\nYou can resign anytime though.")
-            self.draw = (game_state['wdraw'], game_state['bdraw'])
+        moves = game_state['moves'].split()
 
-        else:   # play normally
-            moves = game_state['moves'].split()
+        if moves == self.moves:
+            return
 
-            color = bool(len(moves) % 2)
-            pos = self.bot.hist[-1].move(sk.mparse(not color, moves[-1]))
-            self.bot.hist.append(pos)
-            bot_turn = not self.bot_white == color
+        color = bool(len(moves) % 2)
+        pos = self.bot.hist[-1].move(sk.mparse(not color, moves[-1]))
+        self.bot.hist.append(pos)
+        bot_turn = not self.bot_white == color
 
-            if bot_turn:
-                time_limit = (game_state[self.ctime].minute * 60 + game_state[self.ctime].second)/60
-                time_limit = min(self.bot.time_limit, time_limit)
-                move = depth = None
-                start = time.time()
-                for depth, move, score in self.bot.search(pos):
-                    # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
-                    if time.time() - start > time_limit:
-                        break
-                print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
-                move = sk.mrender(pos, move)
-                self.client.bots.make_move(game_id, move)
+        if bot_turn:
+            time_limit = (game_state[self.ctime].minute * 60 + game_state[self.ctime].second)/60
+            time_limit = min(self.bot.time_limit, time_limit)
+            move = depth = None
+            start = time.time()
+
+            for depth, move, score in self.bot.search(pos):
+                # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
+                if time.time() - start > time_limit:
+                    break
+            print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
+
+            move = sk.mrender(pos, move)
+            self.client.bots.make_move(game_id, move)
 
     def handle_chat_line(self, chat_line):
         pass
