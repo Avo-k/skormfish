@@ -20,7 +20,7 @@ class Game:
         self.infos = next(self.stream)
         self.bot_white = self.infos['white'].get('id') == bot_id
         self.current_state = self.infos['state']
-        self.ctime = "btime" if self.bot_white else "wtime"
+        self.ctime = "wtime" if self.bot_white else "btime"
         self.bot = sk.Skormfish(time_limit=5)
         self.moves = ""
 
@@ -62,7 +62,7 @@ class Game:
 
         if bot_turn:
             remaining = game_state[self.ctime]
-            time_limit = remaining/1000 if isinstance(remaining, int) else (remaining.minute * 60 + remaining.second)/60
+            time_limit = (remaining/1000 if isinstance(remaining, int) else (remaining.minute * 60 + remaining.second))/60
             time_limit = min(self.bot.time_limit, time_limit)
             move = depth = None
             start = time.time()
@@ -71,10 +71,14 @@ class Game:
                 # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
                 if time.time() - start > time_limit:
                     break
-            print(f"depth: {depth} - time: {round(time.time() - start, 3)} seconds")
+            actual_time = time.time() - start
 
             move = sk.mrender(pos, move)
             self.client.bots.make_move(game_id, move)
+
+            print("-"*40)
+            print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
+            print(f"aiming_time: {round(time_limit, 2)} - delta: {round(actual_time - time_limit, 2)}")
 
     def handle_chat_line(self, chat_line):
         pass
