@@ -79,14 +79,14 @@ end_pst['K'] = (-50,-40,-30,-20,-20,-30,-40,-50,
                 -30,-30,  0,  0,  0,  0,-30,-30,
                 -50,-30,-30,-30,-30,-30,-30,-50)
 
-end_pst['P'] = ( 0,  0,  0,  0,  0,  0,  0,  0,
-                80, 80, 80, 80, 80, 80, 80, 80,
-                20, 20, 30, 40, 40, 30, 20, 20,
-                10, 10, 15, 30, 30, 15, 10, 10,
-                 5,  5, 10, 20, 20, 10,  5,  5,
-                 0,-10,-15, -5, -5,-15,-10,  0,
-                -5, -5, -5,-20,-20, -5, -5, -5,
-                 0,  0,  0,  0,  0,  0,  0,  0)
+end_pst['P'] =  ( 0,  0,  0,  0,  0,  0,  0,  0,
+                 80, 80, 80, 80, 80, 80, 80, 80,
+                 20, 20, 30, 40, 40, 30, 20, 20,
+                 10, 10, 15, 30, 30, 15, 10, 10,
+                  5,  5, 10, 20, 20, 10,  5,  5,
+                  0,-10,-15, -5, -5,-15,-10,  0,
+                 -5, -5, -5,-20,-20, -5, -5, -5,
+                  0,  0,  0,  0,  0,  0,  0,  0)
 
 
 def pad_n_join(piece_value, pst):
@@ -97,27 +97,15 @@ def pad_n_join(piece_value, pst):
     return pst
 
 
-# pad and join both piece square tables
+# Pad and join both piece square tables
 opp_pst = pad_n_join(opp_piece_value, opp_pst)
 end_pst = pad_n_join(end_piece_value, end_pst)
 
-# Our board is represented as a 120 character string. The padding allows for
-# fast detection of moves that don't stay within the board.
-A1, H1, A8, H8 = 91, 98, 21, 28
-initial = (
-    '         \n'  # 0 -  9
-    '         \n'  # 10 - 19
-    ' rnbqkbnr\n'  # 20 - 29
-    ' pppppppp\n'  # 30 - 39
-    ' ........\n'  # 40 - 49
-    ' ........\n'  # 50 - 59
-    ' ........\n'  # 60 - 69
-    ' ........\n'  # 70 - 79
-    ' PPPPPPPP\n'  # 80 - 89
-    ' RNBQKBNR\n'  # 90 - 99
-    '         \n'  # 100 -109
-    '         \n'  # 110 -119
-)
+# Transposition table Entry
+Entry = namedtuple('Entry', 'flag value')
+
+# Transposition table max len
+TABLE_SIZE = 1e7
 
 # Lists of possible moves for each piece type.
 N, E, S, W = -10, 1, 10, -1
@@ -135,23 +123,37 @@ directions = {
 MATE_LOWER = opp_piece_value['K'] - 10 * opp_piece_value['Q']
 MATE_UPPER = opp_piece_value['K'] + 10 * opp_piece_value['Q']
 
-# transposition table max len
-TABLE_SIZE = 1e7
-
 # Delta pruning
-QS_LIMIT = 200
+QS_LIMIT = 500
 
 
 def get_color(pos):
     ''' A slightly hacky way to to get the color from a sunfish position '''
     return BLACK if pos.board.startswith('\n') else WHITE
 
-# lower <= s(pos) <= upper
-Entry = namedtuple('Entry', 'flag value')
 
 #####################################################
 # The Board
 #####################################################
+
+# board is represented as a 120 character string. The padding allows for
+# fast detection of moves that don't stay within the board.
+A1, H1, A8, H8 = 91, 98, 21, 28
+initial = (
+    '         \n'  # 0 -  9
+    '         \n'  # 10 - 19
+    ' rnbqkbnr\n'  # 20 - 29
+    ' pppppppp\n'  # 30 - 39
+    ' ........\n'  # 40 - 49
+    ' ........\n'  # 50 - 59
+    ' ........\n'  # 60 - 69
+    ' ........\n'  # 70 - 79
+    ' PPPPPPPP\n'  # 80 - 89
+    ' RNBQKBNR\n'  # 90 - 99
+    '         \n'  # 100 -109
+    '         \n'  # 110 -119
+)
+
 
 class Position(namedtuple('Position', 'board score wc bc ep kp')):
     """ A state of a chess game

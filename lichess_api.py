@@ -18,14 +18,15 @@ class Game:
         self.client = client
         self.stream = client.bots.stream_game_state(game_id)
         self.current_state = next(self.stream)
-        self.bot_color = self.current_state['black'].get('id') == bot_id
-        self.ctime = "btime" if self.bot_color else "wtime"
+        self.bot_white = self.current_state['white'].get('id') == bot_id
+        self.ctime = "btime" if self.bot_white else "wtime"
         self.bot = sk.Skormfish(time_limit=5)
         self.draw = False, False
 
     def run(self):
         print('game start!')
-        if not self.bot_color:
+
+        if self.bot_white:
             self.client.bots.make_move(game_id, 'e2e4')
 
         for event in self.stream:
@@ -49,7 +50,7 @@ class Game:
             color = bool(len(moves) % 2)
             pos = self.bot.hist[-1].move(sk.mparse(not color, moves[-1]))
             self.bot.hist.append(pos)
-            bot_turn = self.bot_color == color
+            bot_turn = not self.bot_white == color
 
             if bot_turn:
                 time_limit = (game_state[self.ctime].minute * 60 + game_state[self.ctime].second)/60
