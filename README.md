@@ -2,9 +2,11 @@
 
 Python chess engine based on sunfish.
 
-Project still in progress and improving, feel free to play it at https://lichess.org/@/Skormfish
+Play Skormfish at https://lichess.org/@/Skormfish
 
 ## Engine
+
+**Project still in progress and improving**
 
 ### Search logic
 
