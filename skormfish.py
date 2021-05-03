@@ -5,6 +5,7 @@ import re, sys, time
 from chess_logic import *
 
 
+
 class Skormfish:
 
     def __init__(self, time_limit=1, print_infos=False):

@@ -4,6 +4,7 @@ import time
 import skormfish as sk
 
 
+
 API_TOKEN = open("api_token.txt").read()
 bot_id = 'skormfish'
 
