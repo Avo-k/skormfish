@@ -62,10 +62,10 @@ class Game:
                 move = depth = None
                 start = time.time()
                 for depth, move, score in self.bot.search(pos):
-                    print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
+                    # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
                     if time.time() - start > time_limit:
                         break
-                # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
+                print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
                 move = sk.mrender(pos, move)
                 self.client.bots.make_move(game_id, move)
 
