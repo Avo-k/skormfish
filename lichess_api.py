@@ -98,24 +98,29 @@ class Game:
         for depth, move, score in self.bot.search(pos):
             if time.time() - start > self.bot.time_limit:
                 break
+        actual_time = time.time() - start
         # Play the move
         move = sk.mrender(pos, move)
         self.client.bots.make_move(game_id, move)
+
+        print("-" * 40)
+        print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
+        print(f"score: {score} - time delta: {round(actual_time - self.bot.time_limit, 2)}")
 
     def handle_chat_line(self, chat_line):
         pass
 
 
+print("Ready to play!")
 for event in client.bots.stream_incoming_events():
-
     if event['type'] == 'challenge':
         challenge = event['challenge']
         if challenge['speed'] in ('bullet', 'blitz', 'rapid', 'classic'):
             if challenge['variant']['short'] in ("Std", "FEN"):
                 client.bots.accept_challenge(challenge['id'])
+                print('challenge accepted!')
         else:
             client.bots.decline_challenge(challenge['id'])
-        print('challenge accepted!')
 
     elif event['type'] == 'gameStart':
         game_id = event['game']['id']
