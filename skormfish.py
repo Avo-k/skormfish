@@ -1,4 +1,5 @@
 from chess_logic import *
+import time
 
 
 class Skormfish:
@@ -108,10 +109,14 @@ class Skormfish:
                   "-"*40)
         return move
 
-    def from_pos(self, moves):
+    def from_moves(self, moves):
         moves = moves.split()
         c = False
 
         for move in moves[:-1]:
             self.hist.append(self.hist[-1].move(mparse(c, move)))
             c = not c
+
+    def from_pos(self, fen):
+        pos = parseFEN(fen)
+        self.hist.append(pos)

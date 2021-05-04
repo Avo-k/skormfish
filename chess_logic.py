@@ -1,8 +1,8 @@
 from __future__ import print_function
-from itertools import count
+
+import re
 from collections import namedtuple
-from statistics import mean
-import re, sys, time
+from itertools import count
 
 # TODO: mobility, opp/end piece value/pst, BNR pairs, King safety
 
@@ -251,7 +251,8 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
     def value(self, move):
         # end-game ?
         # pst = self.pst()
-        pst = ope_pst
+        pst = ope_pst if any(p in 'Qq' for p in self.board) else end_pst
+        # pst = ope_pst
         i, j = move
         p, q = self.board[i], self.board[j]
         # Actual move
