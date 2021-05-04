@@ -48,7 +48,6 @@ class Game:
                 self.handle_chat_line(event)
 
     def handle_state_change(self, game_state):
-
         # If state change is not a move (draws offers, flag...)
         if game_state['moves'] == self.moves:
             return
@@ -62,17 +61,19 @@ class Game:
 
         if bot_turn:
             remaining = game_state[self.ctime]
-            time_limit = (remaining/1000 if isinstance(remaining, int) else (remaining.minute * 60 + remaining.second))/60
+            time_limit = (remaining/1000 if isinstance(remaining, int) else (remaining.minute * 60 + remaining.second))/40
             time_limit = min(self.bot.time_limit, time_limit)
             move = depth = None
             start = time.time()
 
+            # Look for a move
             for depth, move, score in self.bot.search(pos):
                 # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
                 if time.time() - start > time_limit:
                     break
             actual_time = time.time() - start
 
+            # Play the move
             move = sk.mrender(pos, move)
             self.client.bots.make_move(game_id, move)
 

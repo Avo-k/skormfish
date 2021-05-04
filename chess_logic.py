@@ -1,6 +1,7 @@
 from __future__ import print_function
 from itertools import count
 from collections import namedtuple
+from statistics import mean
 import re, sys, time
 
 # TODO: mobility, opp/end piece value/pst, BNR pairs, King safety
@@ -12,7 +13,7 @@ FEN_INITIAL = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 opp_piece_value = {'P': 100, 'N': 305, 'B': 333, 'R': 563, 'Q': 950, 'K': 60000}
 end_piece_value = {'P': 125, 'N': 280, 'B': 360, 'R': 600, 'Q': 1000, 'K': 60000}
 
-opp_pst = {
+ope_pst = {
     'P':   ( 0,  0,  0,  0,  0,  0,  0,  0,
             50, 50, 50, 50, 50, 50, 50, 50,
             10, 10, 20, 30, 30, 20, 10, 10,
@@ -68,7 +69,7 @@ opp_pst = {
              20, 30, 10,  0,  0, 10, 30, 20)
 }
 
-end_pst = opp_pst.copy()
+end_pst = ope_pst.copy()
 
 end_pst['K'] = (-50,-40,-30,-20,-20,-30,-40,-50,
                 -30,-20,-10,  0,  0,-10,-20,-30,
@@ -93,12 +94,12 @@ def pad_n_join(piece_value, pst):
     for k, table in pst.items():
         padrow = lambda row: (0,) + tuple(x + piece_value[k] for x in row) + (0,)
         pst[k] = sum((padrow(table[i * 8:i * 8 + 8]) for i in range(8)), ())
-        pst[k] = (0,) * 20 + opp_pst[k] + (0,) * 20
+        pst[k] = (0,) * 20 + pst[k] + (0,) * 20
     return pst
 
 
 # Pad and join both piece square tables
-opp_pst = pad_n_join(opp_piece_value, opp_pst)
+ope_pst = pad_n_join(opp_piece_value, ope_pst)
 end_pst = pad_n_join(end_piece_value, end_pst)
 
 # Transposition table Entry
@@ -236,27 +237,41 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
         # We rotate the returned position, so it's ready for the next player
         return Position(board, score, wc, bc, ep, kp).rotate()
 
+    def pst(self):
+        eg = {'Q': 26,
+              'R': 6,
+              'B': 3,
+              'N': 3}
+        ope = sum(eg.get(p, 0) for p in self.board.upper()) / 100
+        tables = {}
+        for p, t in ope_pst.items():
+            tables[p] = tuple(int(s * ope + end_pst[p][i] * (1 - ope)) for i, s in enumerate(t))
+        return tables
+
     def value(self, move):
+        # end-game ?
+        # pst = self.pst()
+        pst = ope_pst
         i, j = move
         p, q = self.board[i], self.board[j]
         # Actual move
-        score = opp_pst[p][j] - opp_pst[p][i]
+        score = pst[p][j] - pst[p][i]
         # Capture
         if q.islower():
-            score += opp_pst[q.upper()][119 - j]
+            score += pst[q.upper()][119 - j]
         # Castling check detection
         if abs(j - self.kp) < 2:
-            score += opp_pst['K'][119 - j]
+            score += pst['K'][119 - j]
         # Castling
         if p == 'K' and abs(i - j) == 2:
-            score += opp_pst['R'][(i + j) // 2]
-            score -= opp_pst['R'][A1 if j < i else H1]
+            score += pst['R'][(i + j) // 2]
+            score -= pst['R'][A1 if j < i else H1]
         # Special pawn stuff
         if p == 'P':
             if A8 <= j <= H8:
-                score += opp_pst['Q'][j] - opp_pst['P'][j]
+                score += pst['Q'][j] - pst['P'][j]
             if j == self.ep:
-                score += opp_pst['P'][119 - (j + S)]
+                score += pst['P'][119 - (j + S)]
         return score
 
 
@@ -301,8 +316,8 @@ def parseFEN(fen):
     wc = ('Q' in castling, 'K' in castling)
     bc = ('k' in castling, 'q' in castling)
     ep = parse(enpas) if enpas != '-' else 0
-    score = sum(opp_pst[p][i] for i, p in enumerate(board) if p.isupper())
-    score -= sum(opp_pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
+    score = sum(ope_pst[p][i] for i, p in enumerate(board) if p.isupper())
+    score -= sum(ope_pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
     pos = Position(board, score, wc, bc, ep, 0)
     return pos if color == 'w' else pos.rotate()
 
