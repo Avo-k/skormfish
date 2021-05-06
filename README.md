@@ -26,8 +26,10 @@ and ends by fish like all the best open source chess engines!
 
 Sunfish: https://github.com/thomasahle/sunfish
 
-Negamax: https://en.wikipedia.org/wiki/Negamax
+snakefish :https://github.com/cglouch/snakefish (bitboard)
 
-https://www.chessprogramming.org/Main_Page
+Negamax: https://en.wikipedia.org/wiki/Negamax (negamax, A/B prunning and ttables)
+
+https://www.chessprogramming.org/Main_Page (everything else)
 
 *Feel free to contact me if you have any questions*
