@@ -3,7 +3,6 @@ import time
 
 
 class Skormfish:
-
     def __init__(self, time_limit=1, print_infos=False):
         self.tt = {}
         self.tt_move = {}

@@ -49,6 +49,7 @@ class Game:
                     self.handle_state_change(event)
                 elif event['status'] in ('mate', 'resign', 'outoftime', 'aborted'):
                     client.bots.post_message(game_id, 'Good game\nWell played')
+                    break
                 else:
                     print('NEW', event['status'])
                     break
@@ -81,15 +82,23 @@ class Game:
                 # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
                 if time.time() - start > time_limit:
                     break
+                if depth == 5:
+                    break
             actual_time = time.time() - start
 
             # Play the move
             move = sk.mrender(pos, move)
-            self.client.bots.make_move(game_id, move)
+            if game_state['status'] == "started":
+                self.client.bots.make_move(game_id, move)
 
             print("-" * 40)
             print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
             print(f"score: {score} - time delta: {round(actual_time - time_limit, 2)}")
+
+            self.pondering(game_state)
+
+    def pondering(self, game_state):
+        pass
 
     def make_first_move(self):
         pos = self.bot.hist[-1]
