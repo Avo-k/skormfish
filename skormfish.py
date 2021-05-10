@@ -21,6 +21,9 @@ class Skormfish:
             self.negamax(pos, -beta, -alpha, depth)
             yield depth, self.tt_move.get(pos), self.tt_score.get((pos, depth, True)).value
 
+    def pondering(self, pos, alpha=float('-inf'), beta=float('inf')):
+        pass
+
     def negamax(self, pos, alpha, beta, depth, root=True):
         self.nodes += 1
         depth = max(depth, 0)

@@ -1,7 +1,9 @@
 import berserk
 import time
+import multiprocessing
 
 import skormfish as sk
+from chess_logic import pv
 
 API_TOKEN = open("api_token.txt").read()
 bot_id = 'skormfish'
@@ -12,7 +14,6 @@ client = berserk.Client(session=session)
 
 class Game:
     def __init__(self, client, game_id, bot=sk.Skormfish(time_limit=5), **kwargs):
-        super().__init__(**kwargs)
         self.game_id = game_id
         self.client = client
         self.stream = client.bots.stream_game_state(game_id)
@@ -22,6 +23,7 @@ class Game:
         self.ctime = "wtime" if self.bot_white else "btime"
         self.bot = bot
         self.moves = ""
+        self.ponder = None
 
     def run(self):
         print('game start!')
@@ -47,7 +49,7 @@ class Game:
             if event['type'] == 'gameState':
                 if event['status'] == 'started':
                     self.handle_state_change(event)
-                elif event['status'] in ('mate', 'resign', 'outoftime', 'aborted'):
+                elif event['status'] in ('mate', 'resign', 'outoftime', 'aborted', 'draw'):
                     client.bots.post_message(game_id, 'Good game\nWell played')
                     break
                 else:
@@ -67,38 +69,45 @@ class Game:
         pos = self.bot.hist[-1].move(sk.mparse(color, moves[-1]))
         self.bot.hist.append(pos)
         bot_turn = self.bot_white == color
+        start = time.time()
+        # time management
+        t = game_state[self.ctime]
+        remaining_time = t / 1000 if isinstance(t, int) else t.minute * 60 + t.second
+        time_limit = min(self.bot.time_limit, remaining_time / 40)
+        depth_limit = max(5, remaining_time // 10)
+        depth = move = score = None
 
         if bot_turn:
-            # time management
-            remaining = game_state[self.ctime]
-            time_limit = (remaining / 1000 if isinstance(remaining, int) else (
-                        remaining.minute * 60 + remaining.second)) / 40
-            time_limit = min(self.bot.time_limit, time_limit)
-            depth = move = score = None
-            start = time.time()
-
             # Look for a move
             for depth, move, score in self.bot.search(pos):
-                # print(f"depth: {depth} - time: {round(time.time() - start, 2)} seconds")
+                # _moves = pv(self.bot, pos, include_scores=False)
                 if time.time() - start > time_limit:
                     break
-                if depth == 5:
+                if depth == depth_limit:
                     break
             actual_time = time.time() - start
 
             # Play the move
             move = sk.mrender(pos, move)
-            if game_state['status'] == "started":
+            if self.infos['state']['status'] == 'started':
                 self.client.bots.make_move(game_id, move)
 
             print("-" * 40)
             print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
             print(f"score: {score} - time delta: {round(actual_time - time_limit, 2)}")
+            print(f"nodes: {self.bot.nodes} - n/s: {round(self.bot.nodes / actual_time)}")
 
-            self.pondering(game_state)
-
-    def pondering(self, game_state):
-        pass
+        else:  # pondering
+            # pondering_depth = min(5, remaining_time // 15)
+            # if pondering_depth < 2:
+            #     print("no pondering")
+            #     return
+            pondering_depth = 5
+            for depth, move, score in self.bot.search(pos):
+                if depth == pondering_depth:
+                    break
+            actual_time = time.time() - start
+            print(f"pondering: {depth}d {round(actual_time, 2)}s")
 
     def make_first_move(self):
         pos = self.bot.hist[-1]
@@ -107,10 +116,13 @@ class Game:
         for depth, move, score in self.bot.search(pos):
             if time.time() - start > self.bot.time_limit:
                 break
+            if depth == 5:
+                break
         actual_time = time.time() - start
         # Play the move
         move = sk.mrender(pos, move)
-        self.client.bots.make_move(game_id, move)
+        if self.infos['state']['status'] == 'started':
+            self.client.bots.make_move(game_id, move)
 
         print("-" * 40)
         print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
