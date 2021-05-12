@@ -40,16 +40,17 @@ def main():
         print("-" * 30)
 
         for depth, result in t.items():
-            if depth == 5:
-                pass
+            # if depth == 5:
+            #     break
             s = time.time()
             r = perft(pos, depth)
             assert r == result
-            print(f"depth {depth} {round(r/(time.time() - s), 2)} n/s")
+            spent = (time.time() - s)
+            print(f"depth {depth}: {round(r/spent, 2)} n/s")
+            print(f"time spent {spent}")
 
 
-if __name__ == "__main__":
-    main()
+main()
 
 import cProfile
 # cProfile.run("perft(initial, 4)")
