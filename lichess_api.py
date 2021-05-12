@@ -98,13 +98,13 @@ class Game:
                 else:
                     self.theory = False
                     print("end of theory")
-                    client.bots.post_message(game_id, f"*Agadmator's voice* And as of move {len(moves)} we have a "
+                    client.bots.post_message(game_id, f"*Agadmator's voice* And as of move {len(moves)//2} we have a "
                                                       f"completely new game")
 
             # Set limits
             time_limit = min(5, remaining_time / 60)
             depth_limit = max(5, remaining_time // 10)
-            nodes_limit = time_limit * 8000
+            nodes_limit = time_limit * 10000
 
             # Look for a move
             for depth, move, score in self.bot.search(pos):

@@ -50,7 +50,5 @@ def main():
             print(f"time spent {spent}")
 
 
-main()
-
-import cProfile
-# cProfile.run("perft(initial, 4)")
+if __name__ == "__main__":
+    main()
