@@ -91,12 +91,13 @@ class Game:
                 else:
                     self.theory = False
                     print("end of theory")
-                    client.bots.post_message(game_id, 'end of theory')
+                    client.bots.post_message(game_id, f"*Agadmator's voice* and as of move {len(moves)} we have a "
+                                                      f"completely new game")
 
             # Limits
             time_limit = min(self.bot.time_limit, remaining_time / 80)
             depth_limit = max(5, remaining_time // 10)
-            nodes_limit = time_limit * 9000
+            nodes_limit = time_limit * 8000
 
             # Look for a move
             for depth, move, score in self.bot.search(pos):
@@ -126,12 +127,16 @@ class Game:
                 print(f"deltas means {round(sum(self.deltas) / len(self.deltas), 2)}")
 
         else:  # pondering
-            pondering_depth = min(6, remaining_time // 10)
+            pondering_depth = min(5, remaining_time // 10)
+            if self.theory:
+                pondering_depth = 4
             if pondering_depth < 2:
                 return
+
             for depth, move, score in self.bot.search(pos):
                 if depth == pondering_depth:
                     break
+
             actual_time = time.time() - start
             if self.print_infos:
                 print("-" * 40)
