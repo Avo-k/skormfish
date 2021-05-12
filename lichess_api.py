@@ -15,7 +15,7 @@ client = berserk.Client(session=session)
 
 
 class Game:
-    def __init__(self, client, game_id, bot=sk.Skormfish(time_limit=5), **kwargs):
+    def __init__(self, client, game_id):
         self.game_id = game_id
         self.client = client
         self.stream = client.bots.stream_game_state(game_id)
@@ -23,12 +23,11 @@ class Game:
         self.bot_white = self.infos['white'].get('id') == bot_id
         self.current_state = self.infos['state']
         self.ctime = "wtime" if self.bot_white else "btime"
-        self.bot = bot
+        self.bot = sk.Skormfish()
         self.moves = ""
         self.ponder = None
         self.deltas = [0]
         self.print_infos = True
-        self.book = chess.polyglot.open_reader("opening_book/leelabook.bin")
         self.theory = True
 
     def run(self):
@@ -75,7 +74,7 @@ class Game:
         pos = self.bot.hist[-1].move(sk.mparse(color, moves[-1]))
         self.bot.hist.append(pos)
         bot_turn = self.bot_white == color
-        depth = score = None
+        depth = score = move = None
 
         # Time variables
         start = time.time()
@@ -113,8 +112,10 @@ class Game:
 
             # Play the move
             move = sk.mrender(pos, move)
-            if self.infos['state']['status'] == 'started':
+            try:
                 self.client.bots.make_move(game_id, move)
+            except:  # Flagged!
+                return
 
             self.deltas.append(round(actual_time - time_limit, 2))
             if self.print_infos:
@@ -122,10 +123,10 @@ class Game:
                 print(f"depth: {depth} - time: {round(actual_time, 2)} seconds")
                 print(f"score: {score} - time delta: {round(actual_time - time_limit, 2)}")
                 print(f"nodes: {self.bot.nodes} - n/s: {round(self.bot.nodes / actual_time)}")
-                print(f"deltas means {round(sum(self.deltas)/len(self.deltas), 2)}")
+                print(f"deltas means {round(sum(self.deltas) / len(self.deltas), 2)}")
 
         else:  # pondering
-            pondering_depth = min(5, remaining_time // 10)
+            pondering_depth = min(6, remaining_time // 10)
             if pondering_depth < 2:
                 return
             for depth, move, score in self.bot.search(pos):
@@ -136,13 +137,13 @@ class Game:
                 print("-" * 40)
                 print(f"pondering: {depth}d {round(actual_time, 2)}s")
 
-    def ask_leela(self, moves):
-            board = chess.Board()
-
-            for m in moves:
-                board.push_uci(m)
-
-            return self.book.get(board)
+    @staticmethod
+    def ask_leela(moves):
+        leela = chess.polyglot.open_reader("opening_book/leelabook.bin")
+        board = chess.Board()
+        for m in moves:
+            board.push_uci(m)
+        return leela.get(board)
 
     def make_first_move(self):
         pos = self.bot.hist[-1]
@@ -174,6 +175,7 @@ for event in client.bots.stream_incoming_events():
             client.bots.decline_challenge(challenge['id'])
 
     elif event['type'] == 'gameStart':
+        print("new game")
         game_id = event['game']['id']
         game = Game(client=client, game_id=game_id)
         game.run()
