@@ -1,6 +1,7 @@
 import berserk
 import time
 import threading
+import random
 
 import skormfish as sk
 from chess_logic import pv
@@ -12,6 +13,10 @@ bot_id = 'skormfish'
 
 session = berserk.TokenSession(API_TOKEN)
 client = berserk.Client(session=session)
+
+gl_quotes = ["May the force be with you", "gl hf", "Good luck\nhave fun"]
+gg_quotes = ["There’s always a bigger fish", "gg", "Good game\nwell played",
+             "You win.. This time"]
 
 
 class Game:
@@ -26,13 +31,13 @@ class Game:
         self.bot = sk.Skormfish()
         self.moves = ""
         self.ponder = None
-        self.deltas = [0]
+        self.deltas = [0.0]
         self.print_infos = True
         self.theory = True
 
     def run(self):
         print('game start!')
-        client.bots.post_message(game_id, 'Good luck\nHave fun')
+        client.bots.post_message(game_id, random.choice(gl_quotes))
 
         # From Position
         if self.infos['variant']['short'] == "FEN":
@@ -55,7 +60,7 @@ class Game:
                 if event['status'] == 'started':
                     self.handle_state_change(event)
                 elif event['status'] in ('mate', 'resign', 'outoftime', 'aborted', 'draw'):
-                    client.bots.post_message(game_id, 'Good game\nWell played')
+                    client.bots.post_message(game_id, random.choice(gg_quotes))
                     break
                 else:
                     print('NEW', event['status'])
@@ -82,6 +87,8 @@ class Game:
         remaining_time = t / 1000 if isinstance(t, int) else t.minute * 60 + t.second
 
         if bot_turn:
+
+            # Look in the books
             if self.theory:
                 entry = self.ask_leela(moves)
                 if entry:
@@ -91,11 +98,11 @@ class Game:
                 else:
                     self.theory = False
                     print("end of theory")
-                    client.bots.post_message(game_id, f"*Agadmator's voice* and as of move {len(moves)} we have a "
+                    client.bots.post_message(game_id, f"*Agadmator's voice* And as of move {len(moves)} we have a "
                                                       f"completely new game")
 
-            # Limits
-            time_limit = min(self.bot.time_limit, remaining_time / 80)
+            # Set limits
+            time_limit = min(5, remaining_time / 60)
             depth_limit = max(5, remaining_time // 10)
             nodes_limit = time_limit * 8000
 
@@ -155,7 +162,7 @@ class Game:
         start = time.time()
         move = None
         for depth, move, score in self.bot.search(pos):
-            if time.time() - start > self.bot.time_limit:
+            if time.time() - start > 5:
                 break
             if depth == 6:
                 break
