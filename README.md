@@ -10,11 +10,16 @@ Play Skormfish at https://lichess.org/@/Skormfish
 
 ### Search logic
 
-Negamax with alpha-beta prunning and transposition table.
+* Iterative deepening 
+  * Negamax
+    * alpha-beta prunning 
+    * transposition table.
 
 ### Evaluation
 
-Simple evaluation with material value and piece square tables.
+* Piece value
+* Piece-square tables
+* Simple end-game detection
 
 ## Name
 
@@ -24,11 +29,11 @@ and ends by fish like all the best open source chess engines!
 
 ## Credit
 
-Sunfish: https://github.com/thomasahle/sunfish
-
-snakefish :https://github.com/cglouch/snakefish (bitboard)
+Sunfish: https://github.com/thomasahle/sunfish (structure and chess logic)
 
 Negamax: https://en.wikipedia.org/wiki/Negamax (negamax, A/B prunning and ttables)
+
+Lc0: https://github.com/LeelaChessZero/ (opening book)
 
 https://www.chessprogramming.org/Main_Page (everything else)
 
