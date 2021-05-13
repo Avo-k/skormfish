@@ -49,6 +49,7 @@ def main():
             print(f"depth {depth}: {round(r/spent, 2)} n/s")
             print(f"time spent {spent}")
 
+import sys
 
 if __name__ == "__main__":
     main()
