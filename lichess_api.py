@@ -1,6 +1,5 @@
 import berserk
 import time
-import threading
 import random
 
 import skormfish as sk
@@ -14,9 +13,10 @@ bot_id = 'skormfish'
 session = berserk.TokenSession(API_TOKEN)
 client = berserk.Client(session=session)
 
-gl_quotes = ["May the force be with you", "gl hf", "Good luck\nhave fun"]
-gg_quotes = ["There’s always a bigger fish", "gg", "Good game\nwell played",
+gl_quotes = ["May the force be with you", "gl hf", "Good luck   have fun"]
+gg_quotes = ["There’s always a bigger fish", "gg", "Good game   well played",
              "You win.. This time"]
+# endtheo_q = []
 
 
 class Game:
@@ -37,6 +37,7 @@ class Game:
 
     def run(self):
         print('game start!')
+
         client.bots.post_message(game_id, random.choice(gl_quotes))
 
         # From Position
@@ -56,6 +57,7 @@ class Game:
 
         # Game loop
         for event in self.stream:
+
             if event['type'] == 'gameState':
                 if event['status'] == 'started':
                     self.handle_state_change(event)
@@ -67,6 +69,9 @@ class Game:
                     break
             elif event['type'] == 'chatLine':
                 self.handle_chat_line(event)
+            else:
+                print('NEW EVENT', event)
+                break
 
     def handle_state_change(self, game_state):
         # If state change is not a move (draws offers, flag...)
