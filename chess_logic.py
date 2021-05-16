@@ -243,10 +243,7 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
               'B': 3,
               'N': 3}
         ope = sum(eg.get(p, 0) for p in self.board.upper()) / 100
-        tables = {}
-        for p, t in ope_pst.items():
-            tables[p] = tuple(int(s * ope + end_pst[p][i] * (1 - ope)) for i, s in enumerate(t))
-        return tables
+        return ope
 
     def value(self, move):
         # end-game ?

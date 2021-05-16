@@ -16,6 +16,7 @@ class Skormfish:
     def search(self, pos, alpha=float('-inf'), beta=float('inf')):
         self.nodes = self.tt_cutoff = 0
         self.tt_score.clear()
+        print(pos.pst())
 
         for depth in range(1, 1000):
             self.negamax(pos, -beta, -alpha, depth)
