@@ -268,8 +268,6 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
                 score += pst['Q'][j] - pst['P'][j]
             if j == self.ep:
                 score += pst['P'][119 - (j + S)]
-        # mob = self.pseudo_mobility() / self.rotate().pseudo_mobility() * 100
-        # score += mob
         return score
 
     def gen_legal_moves(self):
@@ -279,29 +277,6 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
             pos1 = self.move(move)
             if not can_kill_king(pos1):
                 yield move, pos1
-
-    def pseudo_mobility(self):
-        mob = 0
-        for i, p in enumerate(self.board):
-            if p.isupper():
-                for d in directions[p]:
-                    for j in count(i + d, d):
-                        q = self.board[j]
-                        # Stay inside the board, and off friendly pieces
-                        if q.isspace() or q.isupper(): break
-                        # Pawn move, double move and capture
-                        if p == 'P' and d in (N, N + N) and q != '.': break
-                        if p == 'P' and d == N + N and (i < A1 + N or self.board[i + N] != '.'): break
-                        if p == 'P' and d in (N + W, N + E) and q == '.' \
-                                and j not in (self.ep, self.kp, self.kp - 1, self.kp + 1): break
-                        # Move it
-                        mob += 1
-                        # Stop crawlers from sliding, and sliding after captures
-                        if p in 'PNK' or q.islower(): break
-                        # Castling, by sliding the rook next to the king
-                        if i == A1 and self.board[j + E] == 'K' and self.wc[0]: mob += 1
-                        if i == H1 and self.board[j + W] == 'K' and self.wc[1]: mob += 1
-        return mob
 
 
 def can_kill_king(pos):

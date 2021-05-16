@@ -3,7 +3,7 @@ import time
 
 
 class Skormfish:
-    def __init__(self, time_limit=1, print_infos=False):
+    def __init__(self, time_limit=5, print_infos=False):
         self.tt = {}
         self.tt_move = {}
         self.tt_score = {}
@@ -14,6 +14,7 @@ class Skormfish:
         self.print_infos = print_infos
 
     def search(self, pos, alpha=float('-inf'), beta=float('inf')):
+        """Iterative-deepening"""
         self.nodes = self.tt_cutoff = 0
         self.tt_score.clear()
         print(pos.pst())
@@ -26,6 +27,7 @@ class Skormfish:
         pass
 
     def negamax(self, pos, alpha, beta, depth, root=True):
+        """Negamax search with A/B pruning and transposition tables"""
         self.nodes += 1
         depth = max(depth, 0)
         if pos.score <= -MATE_LOWER:
@@ -48,6 +50,7 @@ class Skormfish:
                 return ttentry.value
 
         def moves():
+            """generator to yield moves in order"""
             if depth > 0 and not root and any(c in pos.board for c in 'RBNQ'):
                 yield None, -self.negamax(pos.nullmove(), -beta, -alpha, depth - 3, False)
             if depth == 0:
@@ -113,9 +116,9 @@ class Skormfish:
         return move
 
     def from_moves(self, moves):
+        """update """
         moves = moves.split()
         c = False
-
         for move in moves[:-1]:
             self.hist.append(self.hist[-1].move(mparse(c, move)))
             c = not c
