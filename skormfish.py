@@ -116,7 +116,7 @@ class Skormfish:
         return move
 
     def from_moves(self, moves):
-        """update """
+        """update self.hist with a list of uci moves"""
         moves = moves.split()
         c = False
         for move in moves[:-1]:
@@ -124,5 +124,6 @@ class Skormfish:
             c = not c
 
     def from_pos(self, fen):
+        """append a FEN to self.hist"""
         pos = parseFEN(fen)
         self.hist.append(pos)

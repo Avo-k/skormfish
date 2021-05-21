@@ -4,7 +4,6 @@ import random
 
 import skormfish as sk
 from chess_logic import pv
-import chess
 import chess.polyglot
 
 API_TOKEN = open("api_token.txt").read()
@@ -13,10 +12,10 @@ bot_id = 'skormfish'
 session = berserk.TokenSession(API_TOKEN)
 client = berserk.Client(session=session)
 
-gl_quotes = ["May the force be with you", "gl hf", "Good luck   have fun"]
-gg_quotes = ["There’s always a bigger fish", "gg", "Good game   well played",
-             "You win.. This time"]
-# endtheo_q = []
+gl_quotes = ["May the force be with you", "gl hf", "Good luck have fun"]
+gg_quotes = ["There’s always a bigger fish", "gg", "Good game well played", "and the best of us claim the win"]
+endtheo_q = lambda m: [f"*Agadmator's voice* And as of move {len(m) // 2} we have a completely new game",
+                       "end of theory", "I can't remember what's next..", "Ok, now I start thinking."]
 
 
 class Game:
@@ -67,13 +66,16 @@ class Game:
                 else:
                     print('NEW', event['status'])
                     break
+
             elif event['type'] == 'chatLine':
                 self.handle_chat_line(event)
+
             else:
                 print('NEW EVENT', event)
                 break
 
     def handle_state_change(self, game_state):
+
         # If state change is not a move (draws offers, flag...)
         if game_state['moves'] == self.moves:
             return
@@ -103,8 +105,7 @@ class Game:
                 else:
                     self.theory = False
                     print("end of theory")
-                    client.bots.post_message(game_id, f"*Agadmator's voice* And as of move {len(moves)//2} we have a "
-                                                      f"completely new game")
+                    client.bots.post_message(game_id, random.choice(endtheo_q(moves)))
 
             # Set limits
             time_limit = min(5, remaining_time / 60)
@@ -113,7 +114,6 @@ class Game:
 
             # Look for a move
             for depth, move, score in self.bot.search(pos):
-                # _moves = pv(self.bot, pos, include_scores=False)
                 if time.time() - start > time_limit:
                     break
                 if depth == depth_limit:

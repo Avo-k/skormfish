@@ -40,8 +40,6 @@ def main():
         print("-" * 30)
 
         for depth, result in t.items():
-            # if depth == 5:
-            #     break
             s = time.time()
             r = perft(pos, depth)
             assert r == result
@@ -49,7 +47,6 @@ def main():
             print(f"depth {depth}: {round(r/spent, 2)} n/s")
             print(f"time spent {spent}")
 
-import sys
 
 if __name__ == "__main__":
     main()
