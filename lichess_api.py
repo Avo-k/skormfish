@@ -13,7 +13,7 @@ session = berserk.TokenSession(API_TOKEN)
 client = berserk.Client(session=session)
 
 gl_quotes = ["May the force be with you", "gl hf", "Good luck have fun"]
-gg_quotes = ["There’s always a bigger fish", "gg", "Good game well played", "and the best of us claim the win"]
+gg_quotes = ["There’s always a bigger fish", "gg", "Good game well played", "and the best of us claims the win"]
 endtheo_q = lambda m: [f"*Agadmator's voice* And as of move {len(m) // 2} we have a completely new game",
                        "end of theory", "I can't remember what's next..", "Ok, now I start thinking."]
 
@@ -94,7 +94,6 @@ class Game:
         remaining_time = t / 1000 if isinstance(t, int) else t.minute * 60 + t.second
 
         if bot_turn:
-
             # Look in the books
             if self.theory:
                 entry = self.ask_leela(moves)
@@ -120,7 +119,6 @@ class Game:
                     break
                 if self.bot.nodes > nodes_limit:
                     break
-
             actual_time = time.time() - start
 
             # Play the move
