@@ -9,7 +9,14 @@ def perft(pos, depth):
     count = 0
     moves = pos.gen_legal_moves()
     for m in tqdm(moves):
-        count += child_perft(m[1], depth - 1)
+        if mrender(pos, m[0]) == 'g2g4':
+            c = perft(m[1], depth - 1)
+            count += c
+            print(mrender(pos, m[0]), c)
+        else:
+            c = child_perft(m[1], depth - 1)
+            count += c
+            print(mrender(pos, m[0]), c)
     return count
 
 
@@ -23,7 +30,7 @@ def child_perft(pos, depth):
     return count
 
 
-pos1 = Position(initial, 0, (True, True), (True, True), 0, 0)
+pos1 = Position(initial, 0, (True, True), (True, True), 0, 0, 2)
 time1 = {1: 20, 2: 400, 3: 8902, 4: 197281, 5: 4865609}
 pos2 = parseFEN("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1")
 time2 = {1: 48, 2: 2039, 3: 97862, 4: 4085603, 5: 193690690}
@@ -35,11 +42,15 @@ positions = [(pos1, time1), (pos2, time2), (pos3, time3)]
 
 def main():
     for i, (pos, t) in enumerate(positions, 1):
+        if i > 1:
+            break
         print("-" * 30)
         print(" " * 8, f"POSITION {i}")
         print("-" * 30)
 
         for depth, result in t.items():
+            if depth > 3:
+                break
             s = time.time()
             r = perft(pos, depth)
             assert r == result

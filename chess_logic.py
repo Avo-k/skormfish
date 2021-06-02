@@ -116,8 +116,7 @@ directions = {
     'B': (N + E, S + E, S + W, N + W),
     'R': (N, E, S, W),
     'Q': (N, E, S, W, N + E, S + E, S + W, N + W),
-    'K': (N, E, S, W, N + E, S + E, S + W, N + W)
-}
+    'K': (N, E, S, W, N + E, S + E, S + W, N + W)}
 
 # When a MATE is detected, we'll set the score to MATE_UPPER - plies to get there
 # E.g. Mate in 3 will be MATE_UPPER - 6
@@ -156,7 +155,7 @@ initial = (
 )
 
 
-class Position(namedtuple('Position', 'board score wc bc ep kp')):
+class Position(namedtuple('Position', 'board score wc bc ep kp qu')):
     """ A state of a chess game
     board -- a 120 char representation of the board
     score -- the board evaluation
@@ -164,6 +163,7 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
     bc -- the opponent castling rights, [west/king side, east/queen side]
     ep - the en passant square
     kp - the king passant square
+    qu  - the number of queen
     """
 
     def gen_moves(self):
@@ -195,13 +195,13 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
         return Position(
             self.board[::-1].swapcase(), -self.score, self.bc, self.wc,
             119 - self.ep if self.ep else 0,
-            119 - self.kp if self.kp else 0)
+            119 - self.kp if self.kp else 0, self.qu)
 
     def nullmove(self):
         ''' Like rotate, but clears ep and kp '''
         return Position(
             self.board[::-1].swapcase(), -self.score,
-            self.bc, self.wc, 0, 0)
+            self.bc, self.wc, 0, 0, self.qu)
 
     def move(self, move):
         i, j = move
@@ -209,8 +209,10 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
         put = lambda board, i, p: board[:i] + p + board[i + 1:]
         # Copy variables and reset ep and kp
         board = self.board
-        wc, bc, ep, kp = self.wc, self.bc, 0, 0
+        wc, bc, ep, kp, qu = self.wc, self.bc, 0, 0, self.qu
         score = self.score + self.value(move)
+        if q in 'qQ':
+            qu -= 1
         # Actual move
         board = put(board, j, board[i])
         board = put(board, i, '.')
@@ -235,7 +237,7 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
             if j == self.ep:
                 board = put(board, j + S, '.')
         # We rotate the returned position, so it's ready for the next player
-        return Position(board, score, wc, bc, ep, kp).rotate()
+        return Position(board, score, wc, bc, ep, kp, qu).rotate()
 
     def pst(self):
         eg = {'Q': 26,
@@ -247,7 +249,7 @@ class Position(namedtuple('Position', 'board score wc bc ep kp')):
 
     def value(self, move):
         # end-game ?
-        pst = ope_pst if any(p in 'Qq' for p in self.board) else end_pst
+        pst = ope_pst if self.qu else end_pst
         i, j = move
         p, q = self.board[i], self.board[j]
         # Actual move
@@ -328,7 +330,8 @@ def parseFEN(fen):
     ep = parse(enpas) if enpas != '-' else 0
     score = sum(ope_pst[p][i] for i, p in enumerate(board) if p.isupper())
     score -= sum(ope_pst[p.upper()][119 - i] for i, p in enumerate(board) if p.islower())
-    pos = Position(board, score, wc, bc, ep, 0)
+    qu = sum(1 for q in board if q in 'qQ')
+    pos = Position(board, score, wc, bc, ep, 0, qu)
     return pos if color == 'w' else pos.rotate()
 
 

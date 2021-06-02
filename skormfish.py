@@ -7,7 +7,7 @@ class Skormfish:
         self.tt = {}
         self.tt_move = {}
         self.tt_score = {}
-        self.hist = [Position(initial, 0, (True, True), (True, True), 0, 0)]
+        self.hist = [Position(initial, 0, (True, True), (True, True), 0, 0, 2)]
         self.time_limit = time_limit
         self.nodes = 0
         self.tt_cutoff = 0
