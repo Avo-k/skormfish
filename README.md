@@ -29,12 +29,12 @@ and ends by fish like all the best open source chess engines!
 
 ## Credit
 
-Sunfish: https://github.com/thomasahle/sunfish (structure and chess logic)
+[Sunfish](https://github.com/thomasahle/sunfish) (structure and chess logic)
 
-Negamax: https://en.wikipedia.org/wiki/Negamax (negamax, A/B prunning and ttables)
+[Wikipedia Negamax article](https://en.wikipedia.org/wiki/Negamax) (negamax, A/B prunning and ttables)
 
-Lc0: https://github.com/LeelaChessZero/ (opening book)
+[Lc0](https://github.com/LeelaChessZero/) (opening book)
 
-https://www.chessprogramming.org/Main_Page (everything else)
+[Chessprogramming wiki](https://www.chessprogramming.org/Main_Page) (everything else)
 
 *Feel free to contact me if you have any questions*
